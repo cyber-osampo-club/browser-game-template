@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2025", "DOM", "DOM.Iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "noEmit": true,
+    "paths": {
+      "styled-system/*": ["../../styled-system/*"]
+    },
+    "tsBuildInfoFile": "../../node_modules/.tmp/client.tsbuildinfo"
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "../game/**/*.ts"]
+}

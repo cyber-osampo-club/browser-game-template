@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2025"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": [],
+    "noEmit": true,
+    "tsBuildInfoFile": "../../node_modules/.tmp/game.tsbuildinfo"
+  },
+  "include": ["./**/*.ts"]
+}

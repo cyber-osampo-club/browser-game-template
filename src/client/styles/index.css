@@ -1,0 +1,8 @@
+@layer reset, base, tokens, recipes, utilities;
+
+body {
+  background: var(--colors-surface);
+  color: var(--colors-text);
+  font-family:
+    system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif;
+}

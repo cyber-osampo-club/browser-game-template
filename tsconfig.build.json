@@ -1,4 +1,12 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.bench.ts"]
+  "extends": "./src/server/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "sourceMap": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./node_modules/.tmp/server-build.tsbuildinfo"
+  },
+  "include": ["src/server/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.bench.ts"]
 }

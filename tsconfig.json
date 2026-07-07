@@ -1,27 +1,9 @@
 {
-  "compilerOptions": {
-    "target": "ES2025",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "lib": ["ES2025"],
-    "types": ["node"],
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "coverage"]
+  "files": [],
+  "references": [
+    { "path": "./src/client" },
+    { "path": "./src/game" },
+    { "path": "./src/server" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }

@@ -1,16 +1,37 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)),
+    },
+  },
   test: {
-    include: ["src/**/*.test.ts"],
     clearMocks: true,
     restoreMocks: true,
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
       reportsDirectory: "./coverage",
-      include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/**/*.bench.ts"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.bench.ts",
+        // エントリポイント・配線のみのファイル（ロジックを持たせない）
+        "src/client/main.tsx",
+        "src/client/router.tsx",
+        "src/client/routes/**",
+        "src/server/main.ts",
+        // canvas 描画（happy-dom に 2D コンテキストがないため実ブラウザで確認する）
+        "src/client/games/*/render.ts",
+        // デバッグパネル UI（実ブラウザ + chrome-devtools MCP で確認する）
+        "src/client/debug/panel/**",
+        "src/client/debug/index.ts",
+        "src/client/debug/agent-bridge.ts",
+        "src/client/debug/tokens.ts",
+        "src/client/debug/snapshot.ts",
+      ],
       thresholds: {
         lines: 80,
         functions: 80,
@@ -21,5 +42,24 @@ export default defineConfig({
     benchmark: {
       include: ["src/**/*.bench.ts"],
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["src/{game,server}/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "client",
+          environment: "happy-dom",
+          include: ["src/client/**/*.test.{ts,tsx}"],
+          setupFiles: ["./src/client/test-setup.ts"],
+        },
+      },
+    ],
   },
 });

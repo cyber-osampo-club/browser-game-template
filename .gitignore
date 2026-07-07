@@ -148,3 +148,6 @@ dist
 .devcontainer/host-gituser
 .devcontainer/host-claude/
 
+
+# Panda CSS codegen 出力（pnpm codegen で生成）
+styled-system/
