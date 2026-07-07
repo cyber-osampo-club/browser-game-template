@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { buildIssueUrl, MAX_URL_LENGTH } from "./issue-url";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { buildIssueUrl, configuredRepoUrl, MAX_URL_LENGTH } from "./issue-url";
 import type { Snapshot } from "./snapshot";
 
 const snapshot: Snapshot = {
@@ -12,6 +12,10 @@ const snapshot: Snapshot = {
   userAgent: "test-agent",
   viewport: { width: 1280, height: 720 },
 };
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("buildIssueUrl", () => {
   it("bug テンプレートのフィールドへ事前入力する URL を組み立てる", () => {
@@ -43,6 +47,24 @@ describe("buildIssueUrl", () => {
     expect(url.searchParams.get("template")).toBe("enhancement.yml");
     expect(url.searchParams.get("purpose")).toBe("連続回避でスコア倍率");
     expect(url.searchParams.get("reference")).toContain("スナップショット");
+  });
+
+  it("configuredRepoUrl は github.com の owner/repo のみ受理し正規化する", () => {
+    const cases: [string, string | undefined][] = [
+      ["https://github.com/owner/repo", "https://github.com/owner/repo"],
+      ["https://github.com/owner/repo/", "https://github.com/owner/repo"],
+      ["https://github.com/owner/repo?x=1", undefined],
+      ["https://github.com/owner/repo#frag", undefined],
+      ["https://github.com/owner", undefined],
+      ["https://github.com/owner/repo/issues", undefined],
+      ["https://example.com/owner/repo", undefined],
+      ["http://github.com/owner/repo", undefined],
+      ["not-a-url", undefined],
+    ];
+    for (const [input, expected] of cases) {
+      vi.stubEnv("VITE_REPO_URL", input);
+      expect(configuredRepoUrl(), input).toBe(expected);
+    }
   });
 
   it("URL が長すぎる場合は本文を省略して全文を返す", () => {

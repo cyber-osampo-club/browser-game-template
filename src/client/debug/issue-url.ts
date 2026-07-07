@@ -90,10 +90,23 @@ export function buildIssueUrl(repoUrl: string, draft: IssueDraft): IssueUrlResul
 
 /**
  * リポジトリ URL（.env の VITE_REPO_URL）。未設定・不正なら undefined。
- * Issue forms のクエリ事前入力は GitHub 固有のため github.com のみ許可する
- * （GitHub Enterprise Server を使う場合はここの検証を自ホストに合わせて緩める）
+ * Issue forms のクエリ事前入力は GitHub 固有のため github.com のみ許可し、
+ * query / hash 付き等の壊れた URL を弾いて `https://github.com/<owner>/<repo>`
+ * に正規化して返す（GitHub Enterprise Server を使う場合はここを自ホストに合わせて緩める）
  */
 export function configuredRepoUrl(): string | undefined {
-  const url = import.meta.env.VITE_REPO_URL as string | undefined;
-  return url && /^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/?$/.test(url) ? url : undefined;
+  const raw = import.meta.env.VITE_REPO_URL as string | undefined;
+  if (!raw) return undefined;
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return undefined;
+  }
+  if (url.origin !== "https://github.com" || url.search !== "" || url.hash !== "") {
+    return undefined;
+  }
+  const segments = url.pathname.split("/").filter(Boolean);
+  if (segments.length !== 2) return undefined;
+  return `https://github.com/${segments[0]}/${segments[1]}`;
 }
