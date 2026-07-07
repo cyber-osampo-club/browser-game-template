@@ -72,6 +72,27 @@ describe("CanvasGame", () => {
     expect(second).toEqual(first);
   });
 
+  it("restart は押しっぱなしの入力をリセットする（決定論の担保）", () => {
+    const { unmount } = render(<CanvasGame />);
+    const game = getActiveGame();
+    if (!game?.loop || !game.restart || !game.sendInput) throw new Error("フック不足");
+
+    game.loop.pause();
+
+    // キーを押したまま restart しても、離してから restart した場合と同じ結果になる
+    game.sendInput({ type: "press", button: "ArrowLeft" });
+    game.restart(42);
+    game.loop.step(60);
+    const withHeldKey = game.getState() as CanvasGameState;
+
+    game.restart(42);
+    game.loop.step(60);
+    const withoutHeldKey = game.getState() as CanvasGameState;
+
+    expect(withHeldKey).toEqual(withoutHeldKey);
+    unmount();
+  });
+
   it("Space の合成入力でゲームが開始する", () => {
     const { unmount } = render(<CanvasGame />);
     const game = getActiveGame();

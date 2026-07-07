@@ -109,6 +109,9 @@ export function createGameLoop(options: LoopOptions): GameLoop {
     resume() {
       paused = false;
       accumulatorMs = 0;
+      // 基準時刻も破棄し、resume 後の最初の tick は再確定に充てる
+      //（pause 中に rAF が止まっていた場合でも経過時間が加算されない）
+      lastTimeMs = undefined;
     },
     step(frames = 1) {
       if (!paused) return;

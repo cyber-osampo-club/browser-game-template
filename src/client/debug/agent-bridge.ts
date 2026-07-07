@@ -28,7 +28,11 @@ export interface GameDebugApi {
   setTimeScale(scale: number): void;
   /** 合成入力の注入（実入力と同じ経路） */
   sendInput(input: SyntheticInput): void;
-  /** ボタンを durationFrames の間押してから離す（pause 中の便宜メソッド） */
+  /**
+   * ボタンを durationFrames の間押してから離す（pause 中の便宜メソッド）。
+   * durationFrames ぶんのフレームだけを進める。離した状態は次の step() 以降の
+   * update に反映される（release 自体はフレームを消費しない）
+   */
   holdFor(button: string, durationFrames: number): void;
   /** 全パラメーターの現在値 */
   getParams(): Record<string, Record<string, unknown>>;

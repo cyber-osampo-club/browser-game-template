@@ -34,6 +34,8 @@ export function CanvasGame() {
     let state = createInitialState(currentConfig());
 
     const start = (seed?: number) => {
+      // 押しっぱなしのキーが持ち越されると同一シードでも結果が変わるため入力もリセットする
+      input.reset();
       rng = createRng(seed ?? Date.now() >>> 0);
       state = createInitialState(currentConfig());
       state.status = "playing";

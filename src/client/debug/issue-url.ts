@@ -88,8 +88,12 @@ export function buildIssueUrl(repoUrl: string, draft: IssueDraft): IssueUrlResul
   return { url: fallback, bodyOmitted: true, fullText };
 }
 
-/** リポジトリ URL（.env の VITE_REPO_URL）。未設定なら undefined */
+/**
+ * リポジトリ URL（.env の VITE_REPO_URL）。未設定・不正なら undefined。
+ * Issue forms のクエリ事前入力は GitHub 固有のため github.com のみ許可する
+ * （GitHub Enterprise Server を使う場合はここの検証を自ホストに合わせて緩める）
+ */
 export function configuredRepoUrl(): string | undefined {
   const url = import.meta.env.VITE_REPO_URL as string | undefined;
-  return url && /^https:\/\//.test(url) ? url : undefined;
+  return url && /^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/?$/.test(url) ? url : undefined;
 }

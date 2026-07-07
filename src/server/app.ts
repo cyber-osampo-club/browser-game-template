@@ -20,13 +20,12 @@ const scores: ScoreEntry[] = [];
 function isValidScorePayload(body: unknown): body is { name: string; score: number } {
   if (typeof body !== "object" || body === null) return false;
   const { name, score } = body as Record<string, unknown>;
-  return (
-    typeof name === "string" &&
-    name.trim().length > 0 &&
-    name.length <= MAX_NAME_LENGTH &&
-    typeof score === "number" &&
-    Number.isFinite(score)
-  );
+  if (typeof name !== "string" || typeof score !== "number" || !Number.isFinite(score)) {
+    return false;
+  }
+  // 保存されるのは trim 後の値なので、長さ検証も trim 後に対して行う
+  const trimmed = name.trim();
+  return trimmed.length > 0 && trimmed.length <= MAX_NAME_LENGTH;
 }
 
 export const app = new Hono()

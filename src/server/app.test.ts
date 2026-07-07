@@ -47,4 +47,14 @@ describe("/api/scores", () => {
     });
     expect(tooLong.status).toBe(400);
   });
+
+  it("名前の長さ検証は trim 後の値に対して行う", async () => {
+    // 前後の空白込みだと 24 文字を超えるが、trim 後は収まるので受理される
+    const padded = await app.request("/api/scores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: `   ${"a".repeat(24)}   `, score: 1 }),
+    });
+    expect(padded.status).toBe(201);
+  });
 });

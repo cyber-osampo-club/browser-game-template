@@ -101,6 +101,7 @@ describe("createGameLoop", () => {
     expect(loop.frame).toBe(3);
 
     loop.resume();
+    driver.advance(20); // resume 後の最初のフレームは基準時刻の再確定に使われる
     driver.advance(20);
     expect(updates).toBe(5);
   });
@@ -122,6 +123,8 @@ describe("createGameLoop", () => {
     loop.pause();
     driver.advance(200); // pause 中の経過
     loop.resume();
+    driver.advance(500); // 基準時刻の再確定のみ（pause 中の経過も rAF 停止中の経過も加算されない）
+    expect(updates).toBe(0);
     driver.advance(10);
     expect(updates).toBe(1);
   });
