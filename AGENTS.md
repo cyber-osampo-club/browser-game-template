@@ -5,7 +5,9 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## プロジェクト概要
 
-Node.js + pnpm + Biomeベースのテンプレートプロジェクトです。TypeScriptを使用し、Biomeによるフォーマット・リント、vitestによるテストを標準構成としています。
+AI エージェントを活用した開発を前提とする**ブラウザゲーム開発用テンプレート**です。canvas ベースのゲームと HTML 要素（フォーム等）中心のゲームの両方をサポートし、デバッグパネル・フィードバック・AI テストプレイの仕組みを標準装備しています。
+
+技術スタック: Vite + React + TanStack Router（code-based routing）+ Panda CSS + Ark UI（クライアント）、Hono + @hono/node-server（API サーバー。本番では静的配信も担う）、自作の薄いゲームループ（`src/game/`、固定タイムステップ + シード付き乱数）。pnpm + Biome + vitest の品質ゲートは従来どおりです。
 
 コンテナ構成: `Dockerfile`（マルチステージ: `dev` / `prod` / `devcontainer`）、`compose.dev.yml`（開発）、`compose.yml`（本番）。Dev Container（`.devcontainer/devcontainer.json`）は AI エージェント CLI（Claude Code / Codex / GitHub CLI）を Dev Container Features と post-create フック経由で重ねて注入する実行環境も兼ねます。見た目のデバッグ用に headless Chromium + Chrome DevTools MCP（`chrome-devtools-mcp`）も同梱しており、エージェントが開発サーバーの画面をスクリーンショット等で確認できます。さらにホスト設定 — グローバル gitignore、git identity（user.name / user.email）、Claude Code の settings / statusline — も継承します（`.devcontainer/initialize.sh` がステージングし、`.devcontainer/post-start.sh` がコンテナ内へ反映）。
 
@@ -14,13 +16,19 @@ Node.js + pnpm + Biomeベースのテンプレートプロジェクトです。T
 ### 基本的なコマンド
 
 ```bash
-# 開発サーバーの起動（ファイル変更を監視して自動再起動）
+# 開発サーバーの起動（Vite :5173 + Hono API :3000 を並行起動。/api は Vite が proxy）
 pnpm dev
+# 個別起動
+pnpm dev:client   # Vite のみ
+pnpm dev:server   # tsx watch で Hono のみ
 
-# テスト実行
+# Panda CSS の codegen（styled-system/ を生成。dev / build / typecheck / test に内包済み）
+pnpm codegen
+
+# テスト実行（vitest projects: node = src/game + src/server, client = happy-dom）
 pnpm test
 
-# テスト実行（カバレッジレポート付き）
+# テスト実行（カバレッジレポート付き、しきい値 80%）
 pnpm test:cov
 
 # コードフォーマット
@@ -46,14 +54,11 @@ pnpm release-check
 # シークレットスキャン（機密情報の検出）
 pnpm scan:secrets
 
-# ビルド（tsc）
+# ビルド（panda codegen → vite build → tsc。dist/client + dist/server に出力）
 pnpm build
 
-# ビルド成果物を実行
+# ビルド成果物を実行（本番モード :3000。Hono が SPA 配信 + API）
 pnpm start
-
-# 開発実行（tsx で TS を直接実行）
-pnpm tsx src/main.ts
 ```
 
 ### pnpmコマンド
@@ -79,18 +84,41 @@ pnpm update
 ```
 .
 ├── src/
-│   ├── main.ts              # エントリーポイント
-│   ├── main.test.ts         # テストファイル
-│   └── main.bench.ts        # ベンチマークファイル
+│   ├── client/              # React SPA（DOM 環境。Vite の root、index.html もここ）
+│   │   ├── main.tsx         # エントリ（Router マウント + DEV 時のみ debug を dynamic import）
+│   │   ├── router.tsx       # TanStack Router（code-based。ルート追加はここに 1 ブロック足す）
+│   │   ├── routes/          # 各ページ（root レイアウト / ホーム / ゲーム 2 種）
+│   │   ├── games/
+│   │   │   ├── canvas-demo/ # canvas サンプル: ボール避け（logic は純粋関数 + テスト、render は描画のみ）
+│   │   │   └── form-demo/   # HTML 要素サンプル: 計算クイズ（Ark UI + スコア API 連携）
+│   │   ├── debug/           # デバッグ機構（パネル / params / tokens / __GAME_DEBUG__。本番除外）
+│   │   └── styles/          # グローバル CSS（Panda の @layer 定義）
+│   ├── game/                # 環境非依存の純粋ロジック（DOM 直接参照禁止）
+│   │   ├── loop.ts          # 固定タイムステップループ（pause / step / timeScale 対応、rAF 注入式）
+│   │   ├── input.ts         # 入力抽象化（実入力と合成入力を同じ経路に流す）
+│   │   └── rng.ts           # シード付き乱数（mulberry32）。Math.random は直接使わないこと
+│   └── server/              # Hono API（Node 環境）
+│       ├── main.ts          # listen。本番時は dist/client の静的配信 + SPA フォールバック
+│       ├── app.ts           # アプリ本体（/api/health, /api/scores。app.request() でテスト）
+│       └── routes/dev.ts    # /api/dev/*（feedback / snapshot 保存。本番ではマウントされない）
+├── feedback/                # プレイ中のフィードバック・スナップショットの保存先（コミット対象）
 ├── docs/
 │   └── knowledge/           # OKF v0.1 知識バンドル（architecture / adr / conventions / runbooks / research）
 ├── package.json             # プロジェクト設定・依存関係
 ├── pnpm-lock.yaml           # 依存関係のロックファイル
 ├── pnpm-workspace.yaml      # pnpm 設定（allowBuilds 等）
-├── tsconfig.json            # TypeScript設定（型チェック用、テスト/ベンチ込み）
-├── tsconfig.build.json      # ビルド用設定（テスト/ベンチを除外）
+├── index.html は src/client/ 内（Vite root = src/client）
+├── vite.config.ts           # Vite 設定（React plugin / /api proxy / dist/client 出力）
+├── panda.config.ts          # Panda CSS 設定（デザイントークン定義。cssVarRoot: ":root"）
+├── postcss.config.cjs       # PostCSS（@pandacss/dev/postcss）
+├── styled-system/           # Panda codegen 出力（gitignore。pnpm codegen で生成）
+├── tsconfig.json            # ルート（references のみ。実体は tsconfig.base.json + src/*/tsconfig.json）
+├── tsconfig.base.json       # 共有 strict オプション群
+├── tsconfig.node.json       # ルートの設定ファイル（vite/vitest/panda config）用
+├── tsconfig.build.json      # サーバーのビルド用（dist/server へ emit、テスト除外）
 ├── biome.json               # Biome（フォーマッター・リンター）設定
-├── vitest.config.ts         # vitest設定
+├── vitest.config.ts         # vitest設定（projects: node / client(happy-dom)）
+├── .env.example             # VITE_REPO_URL（デバッグパネルの Issue タブ用）
 ├── AGENTS.md                # AIエージェント用ガイドライン（本ファイル）
 ├── CLAUDE.md                # AGENTS.md へのシンボリックリンク
 ├── CHANGELOG.md             # 変更履歴
@@ -150,33 +178,39 @@ pnpm update
 - **linter**: 推奨ルール使用
 - **assist.actions.source.organizeImports**: 有効（v2 のパス）
 
-#### tsconfig.json
+#### tsconfig（Project References による 3 分割）
 
-TypeScript設定：
+共有 strict 群（`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `isolatedModules`,
+`verbatimModuleSyntax` 等）は `tsconfig.base.json` に集約し、領域ごとに環境を分ける：
 
-- **target**: ES2025
-- **module / moduleResolution**: nodenext
-- **lib**: ES2025
-- **strict** に加え `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
-  `isolatedModules`, `verbatimModuleSyntax` などを有効化
-- **rootDir**: ./src
-- **outDir**: ./dist
+- **src/client/tsconfig.json**: lib ES2025+DOM / module preserve / moduleResolution bundler /
+  jsx react-jsx / types [vite/client]。`styled-system/*` の paths あり。noEmit（ビルドは Vite）
+- **src/game/tsconfig.json**: lib ES2025（DOM なし）/ nodenext。**相対 import は `.js` 拡張子必須**
+- **src/server/tsconfig.json**: nodenext / types [node]。同じく `.js` 拡張子必須
+- **tsconfig.node.json**: ルートの vite/vitest/panda 設定ファイル用
+- **tsconfig.build.json**: サーバーの emit 用（`dist/server` へ出力、テスト/ベンチ除外）
 
-ビルド用には `tsconfig.build.json` がテスト/ベンチを除外して継承する。
+型チェックは `tsc -b`（`pnpm typecheck`。panda codegen を内包）。
+
+注意: `src/game` は DOM に依存しない純粋 TypeScript に限定する（`requestAnimationFrame` は
+注入式）。これにより Node 環境の vitest で決定論シミュレーションが可能になる。
 
 #### vitest.config.ts
 
-テスト設定：
+テスト設定（projects 構成）：
 
-- **include**: `src/**/*.test.ts`、**benchmark.include**: `src/**/*.bench.ts`
+- **projects**: `node`（environment: node、`src/{game,server}/**/*.test.ts`）/
+  `client`（environment: happy-dom、`src/client/**/*.test.{ts,tsx}`、testing-library の cleanup を setup で登録）
 - **clearMocks / restoreMocks**: 有効
 - **coverage.provider**: v8 / **reporter**: text, html, lcov / 80% しきい値
+- coverage 除外: エントリ・ルート配線、canvas 描画（`render.ts`）、デバッグパネル UI
+  （実ブラウザ + chrome-devtools MCP で確認する領域）
 
 #### GitHub Actions
 
 継続的インテグレーション：
 
-- **lint.yml**: プッシュ/PR時のコード品質チェック（biome ci + tsc --noEmit + secretlint）
+- **lint.yml**: プッシュ/PR時のコード品質チェック（biome ci + tsc -b + secretlint。typecheck が panda codegen を内包）
 - **test.yml**: プッシュ/PR時のテスト実行とカバレッジ計測（PRにカバレッジレポートをコメント。fork からの PR はコメントをスキップ）
 - **lint_gha.yml**: Actions 自体のリント（actionlint）とセキュリティチェック（zizmor、バージョン固定）
 - **lint_docker.yml**: Dockerfile のリント（hadolint）
@@ -195,8 +229,42 @@ TypeScript設定：
 - **pnpm**: 高速・効率的なパッケージマネージャー
 - **Biome v2**: 高速なフォーマッター・リンター
 - **vitest**: TypeScriptネイティブなテストランナー
-- **tsx**: TypeScript実行エンジン
+- **tsx**: TypeScript実行エンジン（開発時のサーバー watch）
 - **TypeScript**: 型安全性とより良い開発体験
+- **Vite**: クライアントのビルド・開発サーバー
+- **React + TanStack Router**: UI 基盤（ルート数が少ないうちは code-based routing）
+- **Panda CSS + Ark UI**: スタイリング（トークンは CSS variables として出力され、デバッグパネルからランタイム上書き可能）+ ヘッドレス UI
+- **Hono + @hono/node-server**: API サーバー（本番では SPA 配信も担う単一プロセス）
+- **自作ゲームループ（src/game/）**: ライブラリ非依存。ゲームが育って Pixi.js 等が必要になったら後から追加する
+
+## デバッグ・フィードバック・AI テストプレイ
+
+このテンプレートの中核機能。詳細な手順は runbook を参照:
+[docs/knowledge/runbooks/agent-playtest.md](docs/knowledge/runbooks/agent-playtest.md) /
+[docs/knowledge/runbooks/debug-panel.md](docs/knowledge/runbooks/debug-panel.md)
+
+- **デバッグパネル**（開発時のみ。🐞ボタン / Ctrl+Shift+D）: `defineParams()` で登録した
+  ゲームパラメーターと Panda CSS トークンをランタイム調整。調整値は
+  `feedback/snapshots/*.json` へエクスポートでき、エージェントがコード
+  （`params.ts` の default / `panda.config.ts`）へ反映する
+- **`window.__GAME_DEBUG__`**（開発時のみ）: AI テストプレイの窓口。
+  `restart(seed)` / `pause()` / `step(n)` / `sendInput()` / `getState()` / `getEvents()` /
+  `setParam()` / `feedback()`。ゲーム側は `registerGame({ getState, restart, sendInput, loop })`
+  を実装して差し込む（ここだけがゲーム個別、窓口自体は汎用）
+- **data-testid 規約**: [docs/knowledge/conventions/testid.md](docs/knowledge/conventions/testid.md)
+- **本番除外**: デバッグ機構は `main.tsx` の `import.meta.env.DEV` ガード + dynamic import で
+  本番バンドルから除外され、`/api/dev/*` も本番ではマウントされない
+
+### フィードバック運用（エージェントへの申し送り）
+
+1. プレイヤー（開発者）はデバッグパネルの「フィードバック」タブから気づきを送信する
+   → `feedback/<timestamp>_<category>.md`（frontmatter 付き Markdown、スナップショット同梱）
+2. **エージェントはセッション開始時に `feedback/` 内の `status: open` のファイルを確認**し、
+   対応すべきものがあればユーザーに提案する
+3. 対応が完了したら frontmatter を `status: done` に更新する（対応内容が恒久的な知見なら
+   `docs/knowledge/` へ蒸留してからファイルを削除してもよい）
+4. `feedback/snapshots/*.json` は「この調整値をコードに反映して」という依頼の入力。
+   反映後は削除してよい
 
 #### pre-commit hooks
 

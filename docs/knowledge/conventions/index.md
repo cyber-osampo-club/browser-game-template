@@ -14,4 +14,5 @@ timestamp: 2026-06-30T00:00:00Z
 
 ## Index
 
+* [testid.md](testid.md) — data-testid 命名規約 (AI エージェントの DOM 操作・テストを安定させる)。
 * [sample-convention.md](sample-convention.md) — サンプル。実際の取り決めが書けたら置き換える (もしくは削除する)。

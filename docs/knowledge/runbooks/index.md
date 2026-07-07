@@ -12,4 +12,6 @@ timestamp: 2026-06-30T00:00:00Z
 
 ## Index
 
+* [agent-playtest.md](agent-playtest.md) — AI エージェントによるテストプレイ手順 (chrome-devtools MCP + `window.__GAME_DEBUG__`)。
+* [debug-panel.md](debug-panel.md) — デバッグパネルの使い方・拡張・機能ごとの削除手順。
 * [sample-runbook.md](sample-runbook.md) — サンプル。実際の手順が書けたら置き換える (もしくは削除する)。
