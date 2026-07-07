@@ -20,17 +20,21 @@ COPY .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 USER node
+# 5173 = Vite dev server, 3000 = Hono API
+EXPOSE 5173 3000
 CMD ["pnpm", "dev"]
 
-# ===== Stage 3: builder (tsc でビルド + 本番依存のみ抽出) =====
+# ===== Stage 3: builder (Vite + tsc でビルド + 本番依存のみ抽出) =====
 FROM base AS builder
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .npmrc ./
 RUN pnpm install --frozen-lockfile
 
-COPY tsconfig.json tsconfig.build.json ./
+COPY tsconfig.json tsconfig.base.json tsconfig.node.json tsconfig.build.json \
+     vite.config.ts panda.config.ts postcss.config.cjs ./
 COPY src ./src
+# panda codegen → vite build (dist/client) → tsc (dist/server)
 RUN pnpm build
 
 # 本番依存のみ別ディレクトリに展開
@@ -41,6 +45,7 @@ RUN pnpm install --prod --frozen-lockfile --ignore-scripts \
 FROM node:24-slim@sha256:b31e7a42fdf8b8aa5f5ed477c72d694301273f1069c5a2f71d53c6482e99a2fc AS prod
 
 WORKDIR /app
+ENV NODE_ENV=production
 
 COPY --from=builder --chown=node:node /prod-modules ./node_modules
 COPY --from=builder --chown=node:node /app/dist ./dist
@@ -48,7 +53,8 @@ COPY --from=builder --chown=node:node /app/package.json ./package.json
 
 USER node
 ENTRYPOINT []
-CMD ["node", "dist/main.js"]
+EXPOSE 3000
+CMD ["node", "dist/server/main.js"]
 
 # ===== Stage 5: devcontainer =====
 FROM mcr.microsoft.com/vscode/devcontainers/base:bookworm@sha256:bb7b81b6e5be17b5267f92f4ffda534fea37dab1df97b5e86c1f9b91da5c0b5d AS devcontainer

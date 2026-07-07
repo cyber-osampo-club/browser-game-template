@@ -8,6 +8,8 @@ coverage
 node_modules
 dist
 docs
+styled-system
+feedback
 *.md
 !README.md
 .env

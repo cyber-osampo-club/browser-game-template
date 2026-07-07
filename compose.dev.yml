@@ -12,3 +12,6 @@ services:
       - /workspace/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=1
+    ports:
+      - "5173:5173" # Vite dev server
+      - "3000:3000" # Hono API

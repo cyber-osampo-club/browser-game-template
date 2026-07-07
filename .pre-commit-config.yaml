@@ -9,8 +9,8 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json, jsonc]
         pass_filenames: true
       - id: typecheck
-        name: tsc --noEmit
-        # TypeScript の型検査はプロジェクト全体で必要
+        name: tsc -b
+        # TypeScript の型検査はプロジェクト全体で必要（panda codegen も内包）
         entry: pnpm typecheck
         language: system
         pass_filenames: false

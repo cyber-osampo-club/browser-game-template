@@ -33,6 +33,11 @@
     "source=node-modules-${devcontainerId},target=/workspace/node_modules,type=volume",
     "source=pnpm-store-${devcontainerId},target=/home/vscode/.pnpm-store,type=volume"
   ],
+  "forwardPorts": [5173, 3000],
+  "portsAttributes": {
+    "5173": { "label": "Vite dev server" },
+    "3000": { "label": "Hono API" }
+  },
   "containerEnv": {
     "HISTFILE": "/commandhistory/.bash_history",
     "PROMPT_COMMAND": "history -a",

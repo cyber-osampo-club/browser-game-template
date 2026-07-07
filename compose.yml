@@ -6,3 +6,5 @@ services:
       target: prod
     init: true
     restart: unless-stopped
+    ports:
+      - "3000:3000" # Hono (SPA 配信 + API)
