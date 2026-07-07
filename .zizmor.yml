@@ -1,0 +1,9 @@
+# zizmor configuration file
+# GitHub Actions security scanner configuration
+
+rules:
+  unpinned-uses:
+    config:
+      # すべてのアクションを commit hash（docker は digest）で固定する
+      policies:
+        "*": hash-pin
