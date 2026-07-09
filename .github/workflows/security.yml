@@ -63,7 +63,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-      security-events: write
 
     steps:
       - name: Checkout code
@@ -71,9 +70,11 @@ jobs:
         with:
           persist-credentials: false
 
-      # PR（特に fork 由来）は SARIF をアップロードできないため、検出時に fail させる
-      - name: Run Trivy vulnerability scanner (PR)
-        if: github.event_name == 'pull_request'
+      # Security タブ（Code scanning）連携は private リポジトリでは有料プランが必要なため、
+      # SARIF アップロードは行わず「テーブル出力 + CRITICAL/HIGH 検出で fail」に統一する。
+      # public 化して Security タブ集約に戻す場合は format: sarif +
+      # github/codeql-action/upload-sarif（security-events: write 権限）の構成に差し替える。
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           scan-type: "fs"
@@ -81,18 +82,3 @@ jobs:
           format: "table"
           exit-code: "1"
           severity: "CRITICAL,HIGH"
-
-      - name: Run Trivy vulnerability scanner
-        if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
-        with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        if: github.event_name != 'pull_request'
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
-        with:
-          sarif_file: "trivy-results.sarif"

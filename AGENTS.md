@@ -214,7 +214,7 @@ pnpm update
 - **test.yml**: プッシュ/PR時のテスト実行とカバレッジ計測（PRにカバレッジレポートをコメント。fork からの PR はコメントをスキップ）
 - **lint_gha.yml**: Actions 自体のリント（actionlint）とセキュリティチェック（zizmor、バージョン固定）
 - **lint_docker.yml**: Dockerfile のリント（hadolint）
-- **security.yml**: セキュリティ監査（毎日実行。pnpm audit + Trivy、push/cron 時は SARIF を Security タブへ）
+- **security.yml**: セキュリティ監査（毎日実行。pnpm audit + Trivy。Trivy は CRITICAL/HIGH 検出でジョブを fail させるテーブル出力方式。Security タブ連携は private リポジトリで有料プランが必要なため不使用）
 - **sbom.yml**: CycloneDX SBOM の生成（依存関係の変更時、cdxgen）
 - **deps-update.yml**: 依存関係の自動更新（毎週月曜実行、PRを自動作成）
 - **labels.yml**: `.github/labels.yml` から GitHub ラベルを同期
