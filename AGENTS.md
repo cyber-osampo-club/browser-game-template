@@ -230,7 +230,7 @@ pnpm update
 - **Biome v2**: 高速なフォーマッター・リンター
 - **vitest**: TypeScriptネイティブなテストランナー
 - **tsx**: TypeScript実行エンジン（開発時のサーバー watch）
-- **TypeScript**: 型安全性とより良い開発体験
+- **TypeScript 7**: Go 製ネイティブコンパイラによる高速な型チェックと型安全性
 - **Vite**: クライアントのビルド・開発サーバー
 - **React + TanStack Router**: UI 基盤（ルート数が少ないうちは code-based routing）
 - **Panda CSS + Ark UI**: スタイリング（トークンは CSS variables として出力され、デバッグパネルからランタイム上書き可能）+ ヘッドレス UI
