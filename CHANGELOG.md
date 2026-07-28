@@ -8,6 +8,7 @@
 
 ### Added
 
+- Dev Container にタスク用シークレットの Proton Pass（pass-cli）連携を追加（`pass-cli` を devcontainer イメージへ焼き込み、PAT はホストの `~/.config/proton-pass-agent/<ディレクトリ名>`（無ければ `.../pat`）からステージングしてコンテナ内へ永続化、`.devcontainer/pass-relogin` でセッション確立 + gh 認証 seed。`.env.example` に pass:// 参照の書き方サンプルを追記）
 - PR 自動ラベリングを追加（actions/labeler + `.github/labeler.yml` — ハーネス変更 PR に `meta` ラベルを自動付与。fork からの PR はスキップ、`pnpm-lock.yaml` / `.nvmrc` は対象外）
 - README にテンプレート導入チェックリスト（リネーム / LICENSE / CODEOWNERS / docs/knowledge / release-check）を追加
 - `.devcontainer/README.md` の PAT 手順に事前入力済み fine-grained PAT テンプレートのクイックリンクと `Workflows: Write` の権限行を追加
@@ -30,6 +31,9 @@
 
 ### Changed
 
+- Dev Container を Docker Compose ベース構成へ移行（`.devcontainer/compose.yaml` + gitignore 済み `compose.local.yaml` オーバーライド。認証 volume はリビルドごとに増える `*-${devcontainerId}` から固定名の compose named volume へ — 移行後の初回に claude / codex / gh の再ログインが 1 回必要）
+- TypeScript を 7 系（Go 製ネイティブコンパイラ）へ更新（`typescript.tsdk` 設定を撤去し、`TypeScriptTeam.native-preview` 拡張を推奨拡張・Dev Container 拡張に追加）
+- `node:24-slim` の digest（`b31e7a4` → `cb4e8f7`）、`actions/labeler`（v6.2.0）、`astral-sh/setup-uv`（v8.3.2）を更新
 - `tsconfig.json` を `nodenext` + `noUncheckedIndexedAccess` 等で厳格化、`types: ["node"]` を明示
 - `src/main.ts` の脆いエントリ判定を `import.meta.main`（Node 24+）に置換
 - `Dockerfile` を builder/prod に分離し、prod は `tsc` 成果物を非 root の `node` ユーザーで実行
@@ -58,5 +62,6 @@
 
 ### Removed
 
+- API キー（`OPENAI_API_KEY` / `ANTHROPIC_API_KEY`）の `${localEnv:...}` remoteEnv パススルーを廃止（ホスト shell への平文 export が前提で、コンテナ内でも ambient に見えるため。`.env` の pass:// 参照 + `pass-cli run` によるコマンド単位注入へ移行）
 - `devcontainer.json` の冗長な `postStartCommand`
 - コントリビュート系ドキュメント（`SECURITY.md` / `CODE_OF_CONDUCT.md` / `CONTRIBUTING.md`）はテンプレートに含めない方針に変更

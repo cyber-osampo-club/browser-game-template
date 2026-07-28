@@ -9,7 +9,7 @@ AI エージェントを活用した開発を前提とする**ブラウザゲー
 
 技術スタック: Vite + React + TanStack Router（code-based routing）+ Panda CSS + Ark UI（クライアント）、Hono + @hono/node-server（API サーバー。本番では静的配信も担う）、自作の薄いゲームループ（`src/game/`、固定タイムステップ + シード付き乱数）。pnpm + Biome + vitest の品質ゲートは従来どおりです。
 
-コンテナ構成: `Dockerfile`（マルチステージ: `dev` / `prod` / `devcontainer`）、`compose.dev.yml`（開発）、`compose.yml`（本番）。Dev Container（`.devcontainer/devcontainer.json`）は AI エージェント CLI（Claude Code / Codex / GitHub CLI）を Dev Container Features と post-create フック経由で重ねて注入する実行環境も兼ねます。見た目のデバッグ用に headless Chromium + Chrome DevTools MCP（`chrome-devtools-mcp`）も同梱しており、エージェントが開発サーバーの画面をスクリーンショット等で確認できます。さらにホスト設定 — グローバル gitignore、git identity（user.name / user.email）、Claude Code の settings / statusline — も継承します（`.devcontainer/initialize.sh` がステージングし、`.devcontainer/post-start.sh` がコンテナ内へ反映）。
+コンテナ構成: `Dockerfile`（マルチステージ: `dev` / `prod` / `devcontainer`）、`compose.dev.yml`（開発）、`compose.yml`（本番）。Dev Container は Docker Compose ベース（`.devcontainer/compose.yaml` + `devcontainer.json`。gitignore 済み `compose.local.yaml` で個人環境向けオーバーライド可）で、AI エージェント CLI（Claude Code / Codex / GitHub CLI）を Dev Container Features と post-create フック経由で重ねて注入する実行環境も兼ねます。見た目のデバッグ用に headless Chromium + Chrome DevTools MCP（`chrome-devtools-mcp`）も同梱しており、エージェントが開発サーバーの画面をスクリーンショット等で確認できます。さらにホスト設定 — グローバル gitignore、git identity（user.name / user.email）、Claude Code の settings / statusline — も継承します（`.devcontainer/initialize.sh` がステージングし、`.devcontainer/post-start.sh` がコンテナ内へ反映）。
 
 ## 開発コマンド
 
@@ -118,7 +118,7 @@ pnpm update
 ├── tsconfig.build.json      # サーバーのビルド用（dist/server へ emit、テスト除外）
 ├── biome.json               # Biome（フォーマッター・リンター）設定
 ├── vitest.config.ts         # vitest設定（projects: node / client(happy-dom)）
-├── .env.example             # VITE_REPO_URL（デバッグパネルの Issue タブ用）
+├── .env.example             # VITE_REPO_URL（デバッグパネルの Issue タブ用）+ pass:// 参照の書き方サンプル
 ├── AGENTS.md                # AIエージェント用ガイドライン（本ファイル）
 ├── CLAUDE.md                # AGENTS.md へのシンボリックリンク
 ├── CHANGELOG.md             # 変更履歴
@@ -138,10 +138,12 @@ pnpm update
 ├── compose.dev.yml          # 開発用 Docker Compose
 ├── .vscode/                 # VS Code 設定（biome を既定フォーマッタに、保存時に fixAll）
 ├── .devcontainer/
-│   ├── devcontainer.json    # Dev Container 設定（AI エージェントツールも Features で注入、node_modules は volume でホストと分離）
-│   ├── initialize.sh        # initialize フック（ホスト側で実行。グローバル gitignore / git identity / Claude Code 設定をステージング）
+│   ├── devcontainer.json    # Dev Container 設定（compose.yaml を参照。AI エージェントツールは Features で注入）
+│   ├── compose.yaml         # devcontainer 用 compose 定義（固定名 volume で認証永続化・node_modules 分離。compose.local.yaml でローカルオーバーライド）
+│   ├── initialize.sh        # initialize フック（ホスト側で実行。compose.local.yaml スタブ生成 + グローバル gitignore / git identity / Claude Code 設定をステージング）
 │   ├── post-create.sh       # post-create フック（pnpm install + Codex / Chrome DevTools MCP のセットアップ）
 │   ├── post-start.sh        # post-start フック（ステージングされたホスト設定をコンテナ内へ反映）
+│   ├── pass-relogin         # pass-cli セッション確保ヘルパー（エージェントが必要時に実行。gh 認証 seed 込み）
 │   └── codex-config.toml    # Codex CLI 初期設定（永続化される ~/.codex ボリュームへコピー、MCP 登録含む）
 └── .github/
     ├── dependabot.yml       # GitHub Actions / Docker / Dev Container の自動更新（7 日 cooldown）
@@ -285,3 +287,9 @@ pnpm update
 3. **小さなコミット**: 論理的な単位でコミット
 4. **CI/CD**: GitHub Actionsで品質を保証
 5. **ドキュメント**: コードの意図を明確に記述
+
+## シークレットの扱い（Proton Pass / pass-cli）
+
+- シークレットをコミットしないこと。タスク用シークレット（API キー、トークン）は ambient な環境変数ではなく Proton Pass（`pass-cli`）から取得する。必要なコマンドは `PROTON_PASS_AGENT_REASON="<取得理由>" pass-cli run --env-file .env -- <cmd>` で実行する（`.env` にはシークレット本体ではなく `pass://` 参照を書く。書き方は `.env.example` を参照）。
+- `pass-cli` が認証エラーを返したとき、またはセッションが無いとき（`pass-cli info` が失敗するとき）は `.devcontainer/pass-relogin` を実行してからリトライする。コンテナ内に配備済みのトークンからセッションを復元し、`gh` 認証が無ければ seed もする。
+- `~/.local/state/proton-pass-agent/pat` を読む・表示する・コピーすることは禁止 — トークンの値を扱う必要は一切なく、`pass-relogin` がすべて処理する。
