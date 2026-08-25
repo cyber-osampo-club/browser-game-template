@@ -75,12 +75,37 @@ jobs:
           script: |
             const report = (process.env.COVERAGE_REPORT || "").trim();
 
+            // v8 text レポーターの ASCII テーブル部分だけを markdown テーブルへ変換する。
+            // 出力形式が変わって解釈できなければ空文字を返し、生ログへフォールバックする。
+            const toMarkdownTable = (text) => {
+              const lines = text.split("\n");
+              const start = lines.findIndex(l => l.includes("Coverage report from"));
+              if (start === -1) return "";
+              const rows = lines
+                .slice(start + 1)
+                .filter(l => l.includes("|") && !/^[\s|-]+$/.test(l))
+                .map(line => {
+                  const cells = line.split("|");
+                  // 先頭列のインデントはディレクトリ階層を表すので &nbsp; で保持する
+                  const name = cells[0].replace(/\s+$/, "");
+                  const indent = name.length - name.trimStart().length;
+                  return ["&nbsp;".repeat(indent * 2) + name.trim(), ...cells.slice(1).map(c => c.trim())];
+                });
+              if (rows.length < 2) return "";
+              const [header, ...body] = rows;
+              const align = header.map((_, i) => (i === 0 || i === header.length - 1 ? ":---" : "---:"));
+              return [header, align, ...body].map(cells => `| ${cells.join(" | ")} |`).join("\n");
+            };
+
             const runURL = `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
             const downloadLink = `[HTMLレポートをArtifactsからダウンロード](${runURL})`;
 
-            const reportSection = report
-              ? `\n\n\`\`\`\n${report}\n\`\`\``
-              : "\n\nカバレッジデータがありません。";
+            const table = report ? toMarkdownTable(report) : "";
+            const reportSection = table
+              ? `\n\n${table}`
+              : report
+                ? `\n\n\`\`\`\n${report}\n\`\`\``
+                : "\n\nカバレッジデータがありません。";
             const marker = "## テストカバレッジレポート";
             const body = `${marker}\n\n${downloadLink}${reportSection}`;
 

@@ -12,7 +12,8 @@ export default defineConfig({
     restoreMocks: true,
     coverage: {
       provider: "v8",
-      reporter: ["text", "html", "lcov"],
+      // CI では端末幅が 80 桁扱いになりファイル名が省略されるため、text だけ幅を広げる
+      reporter: [["text", { maxCols: process.env.CI ? 200 : 0 }], "html", "lcov"],
       reportsDirectory: "./coverage",
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
