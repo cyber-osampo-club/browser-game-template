@@ -19,7 +19,9 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .npmrc ./
 RUN pnpm install --frozen-lockfile
 
-USER node
+# node イメージの node ユーザー（uid/gid とも 1000）。hadolint DL3066 に従い数値で指定する
+# （Kubernetes の runAsNonRoot など、/etc/passwd を引けない環境でも解決できるように）
+USER 1000:1000
 # 5173 = Vite dev server, 3000 = Hono API
 EXPOSE 5173 3000
 CMD ["pnpm", "dev"]
@@ -51,7 +53,9 @@ COPY --from=builder --chown=node:node /prod-modules ./node_modules
 COPY --from=builder --chown=node:node /app/dist ./dist
 COPY --from=builder --chown=node:node /app/package.json ./package.json
 
-USER node
+# node イメージの node ユーザー（uid/gid とも 1000）。hadolint DL3066 に従い数値で指定する
+# （Kubernetes の runAsNonRoot など、/etc/passwd を引けない環境でも解決できるように）
+USER 1000:1000
 ENTRYPOINT []
 EXPOSE 3000
 CMD ["node", "dist/server/main.js"]

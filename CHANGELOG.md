@@ -56,6 +56,7 @@
 
 ### Fixed
 
+- `Dockerfile` の `USER node` を `USER 1000:1000` に変更（hadolint 3.4.0 で有効になった DL3066 に対応。`lint_docker.yml` の failure-threshold が info のため Dockerfile を触る PR がすべて fail していた）
 - AGENTS.md / README.md の不整合（`ES2023` → `ES2025`、存在しない `agent/`、Biome v1 表記、pre-commit フック名、古いディレクトリ構造）を修正
 - `package.json` の `scan:secrets` を `npx` から `pnpm exec` に変更（lockfile を尊重）
 - `.gitignore` に `.claude/settings.local.json` を明示
