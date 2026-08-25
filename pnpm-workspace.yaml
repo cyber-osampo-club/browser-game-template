@@ -1,6 +1,14 @@
 allowBuilds:
   esbuild: true
 
+# 公開直後の版を掴まないための待機期間（分 = 7 日）。dependabot の cooldown と揃える。
+# pnpm update / pnpm add が新しい版を選ぶときの下限として効く。
+minimumReleaseAge: 10080
+# lockfile に既に載っている版は再検証しない。これが無いと、上の cutoff より新しい
+# 版を含む lockfile に対して pnpm install --frozen-lockfile が失敗する（CI が壊れる）。
+# lockfile の更新は PR レビューを通るため、ここは信頼する。
+trustLockfile: true
+
 # @pandacss/core が postcss を厳密固定しているため、脆弱性修正版へ引き上げる
 # （GHSA-r28c-9q8g-f849 / GHSA-fxqj-rqcc-2cmp。パッチ版なので API 互換）
 # panda 側が固定を上げたら削除すること

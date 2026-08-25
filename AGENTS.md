@@ -218,7 +218,7 @@ pnpm update
 - **lint_docker.yml**: Dockerfile のリント（hadolint）
 - **security.yml**: セキュリティ監査（毎日実行。pnpm audit + Trivy。Trivy は CRITICAL/HIGH 検出でジョブを fail させるテーブル出力方式。Security タブ連携は private リポジトリで有料プランが必要なため不使用）
 - **sbom.yml**: CycloneDX SBOM の生成（依存関係の変更時、cdxgen）
-- **deps-update.yml**: 依存関係の自動更新（毎週月曜実行、PRを自動作成）
+- **deps-update.yml**: 依存関係の自動更新（毎月 1 日実行、PRを自動作成。公開直後の版は pnpm の `minimumReleaseAge` 7 日で保留される）
 - **labels.yml**: `.github/labels.yml` から GitHub ラベルを同期
 - **label_pr.yml**: 変更パスに応じて PR に `meta` ラベルを自動付与（actions/labeler、sync-labels 有効。fork からの PR はスキップ）
 - **copilot-setup-steps.yml**: GitHub Copilot用の環境セットアップ
