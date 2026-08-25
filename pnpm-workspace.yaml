@@ -1,2 +1,8 @@
 allowBuilds:
   esbuild: true
+
+# @pandacss/core が postcss を厳密固定しているため、脆弱性修正版へ引き上げる
+# （GHSA-r28c-9q8g-f849 / GHSA-fxqj-rqcc-2cmp。パッチ版なので API 互換）
+# panda 側が固定を上げたら削除すること
+overrides:
+  postcss: "^8.5.26"
