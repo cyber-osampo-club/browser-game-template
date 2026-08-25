@@ -36,6 +36,7 @@
 - Dev Container を Docker Compose ベース構成へ移行（`.devcontainer/compose.yaml` + gitignore 済み `compose.local.yaml` オーバーライド。認証 volume はリビルドごとに増える `*-${devcontainerId}` から固定名の compose named volume へ — 移行後の初回に claude / codex / gh の再ログインが 1 回必要）
 - TypeScript を 7 系（Go 製ネイティブコンパイラ）へ更新（`typescript.tsdk` 設定を撤去し、`TypeScriptTeam.native-preview` 拡張を推奨拡張・Dev Container 拡張に追加）
 - `node:24-slim` の digest（`b31e7a4` → `cb4e8f7`）、`actions/labeler`（v6.2.0）、`astral-sh/setup-uv`（v8.3.2）を更新
+- `node:24-slim` の digest（`cb4e8f7` → `6f7b03f`）と devcontainers base の digest（`bb7b81b` → `73d85a9`）を更新
 - `tsconfig.json` を `nodenext` + `noUncheckedIndexedAccess` 等で厳格化、`types: ["node"]` を明示
 - `src/main.ts` の脆いエントリ判定を `import.meta.main`（Node 24+）に置換
 - `Dockerfile` を builder/prod に分離し、prod は `tsc` 成果物を非 root の `node` ユーザーで実行
