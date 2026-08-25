@@ -32,6 +32,7 @@
 
 ### Changed
 
+- PR のカバレッジコメントを生ログのコードブロックから markdown テーブルへ変更（v8 text レポーター出力の表部分だけを整形。解釈できない出力になった場合は従来どおり生ログへフォールバック。CI では text レポーターの `maxCols` を広げてファイル名の省略を防止）
 - 依存関係の自動更新頻度を weekly から monthly へ変更（dependabot の 3 エコシステムと `deps-update.yml` の cron。cron は day-of-month と day-of-week の同時指定が OR 判定になるため毎月 1 日固定）
 - 依存関係を semver レンジ内で更新（vite 8.2.2 / vitest 3.2.7 / @pandacss/dev 1.12.0 / hono 4.13.3 / @hono/node-server 2.1.1 / @ark-ui/react 5.39.0 / @tanstack/react-router 1.170.32 ほか）。あわせて `biome.json` の `$schema` を 2.5.10 へ追随
 - GitHub Actions を更新（actions/checkout 7.0.1、pnpm/action-setup 6.0.10、actions/setup-node 7.0.0、actions/labeler 7.0.0、hadolint/hadolint-action 3.4.0、astral-sh/setup-uv 9.0.0）
