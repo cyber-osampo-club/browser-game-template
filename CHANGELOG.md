@@ -31,6 +31,8 @@
 
 ### Changed
 
+- 依存関係を semver レンジ内で更新（vite 8.2.2 / vitest 3.2.7 / @pandacss/dev 1.12.0 / hono 4.13.3 / @hono/node-server 2.1.1 / @ark-ui/react 5.39.0 / @tanstack/react-router 1.170.32 ほか）。あわせて `biome.json` の `$schema` を 2.5.10 へ追随
+- GitHub Actions を更新（actions/checkout 7.0.1、pnpm/action-setup 6.0.10、actions/setup-node 7.0.0、actions/labeler 7.0.0、hadolint/hadolint-action 3.4.0、astral-sh/setup-uv 9.0.0）
 - Dev Container を Docker Compose ベース構成へ移行（`.devcontainer/compose.yaml` + gitignore 済み `compose.local.yaml` オーバーライド。認証 volume はリビルドごとに増える `*-${devcontainerId}` から固定名の compose named volume へ — 移行後の初回に claude / codex / gh の再ログインが 1 回必要）
 - TypeScript を 7 系（Go 製ネイティブコンパイラ）へ更新（`typescript.tsdk` 設定を撤去し、`TypeScriptTeam.native-preview` 拡張を推奨拡張・Dev Container 拡張に追加）
 - `node:24-slim` の digest（`b31e7a4` → `cb4e8f7`）、`actions/labeler`（v6.2.0）、`astral-sh/setup-uv`（v8.3.2）を更新
@@ -65,3 +67,7 @@
 - API キー（`OPENAI_API_KEY` / `ANTHROPIC_API_KEY`）の `${localEnv:...}` remoteEnv パススルーを廃止（ホスト shell への平文 export が前提で、コンテナ内でも ambient に見えるため。`.env` の pass:// 参照 + `pass-cli run` によるコマンド単位注入へ移行）
 - `devcontainer.json` の冗長な `postStartCommand`
 - コントリビュート系ドキュメント（`SECURITY.md` / `CODE_OF_CONDUCT.md` / `CONTRIBUTING.md`）はテンプレートに含めない方針に変更
+
+### Security
+
+- `pnpm audit` が検出していた high 脆弱性 14 件を解消（依存更新 + `pnpm-workspace.yaml` の `overrides` で postcss を 8.5.26 へ引き上げ。@pandacss/core が postcss を厳密固定しており更新が届かないため）
